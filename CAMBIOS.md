@@ -79,9 +79,14 @@ revisión del código.
   `pip install -r requirements.txt`).
 
 ## Cómo probarlo
+> Nota: esto describe la versión vieja en Python/Flask. El proyecto se migró
+> completo a Node.js + PostgreSQL (Supabase); ver `README.md` y, si tenés
+> que sincronizar tu copia local, `actualizar_proyecto.pdf` en el Escritorio.
+> Los pasos actuales son:
 ```
-cd backend
-pip install -r requirements.txt
-python run.py          # aplica la migración automáticamente
+cp .env.example .env   # completar DATABASE_URL con la cadena de Supabase
+npm install             # sólo una vez
+npm run seed             # sólo una vez (crea las tablas y carga los datos de demo)
+npm start                 # cada vez que quieras usar la app
 ```
-Y abrís `index.html` (con el backend corriendo en el puerto 5000).
+Y abrís `http://127.0.0.1:5000` (un solo servidor: API + frontend juntos).

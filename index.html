@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Biblioteca Central · Sistema de Gestión</title>
+<title>Biblioteca · Colegio San Carlos</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%233D63E8'/%3E%3Cpath d='M5 10c3-1.6 7-1.8 11 .6 4-2.4 8-2.2 11-.6v13c-3-1.6-7-1.8-11 .6-4-2.4-8-2.2-11-.6z' fill='none' stroke='white' stroke-width='2' stroke-linejoin='round'/%3E%3Cpath d='M16 10.6v13' stroke='white' stroke-width='2'/%3E%3C/svg%3E">
 <script>
   (function(){
     try {
@@ -14,7 +15,7 @@
   })();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -23,20 +24,37 @@
 
 <!-- PANTALLA DE LOGIN -->
 <div class="login-screen" id="loginScreen">
-  <div class="login-card glass">
-  
-    <h1 class="login-title">Biblioteca</h1>
-    <p class="login-sub">Ingresá con tu usuario y contraseña</p>
-    <div class="field full">
-      <label>Usuario</label>
-      <input type="text" id="f-login-user" placeholder="usuario" autocomplete="username">
+  <div class="login-wrap">
+    <div class="login-card glass">
+      <div class="login-logo">
+        <svg viewBox="0 0 24 24"><path d="M2 5.5C4.5 4.2 8 4 12 6c4-2 7.5-1.8 10-.5V19c-2.5-1.3-6-1.5-10 .5-4-2-7.5-1.8-10-.5z"/><path d="M12 6v13.5"/></svg>
+      </div>
+      <h1 class="login-title">Biblioteca Escolar</h1>
+      <p class="login-school">Colegio Secundario San Carlos</p>
+
+      <div class="field full">
+        <label for="f-login-user">Usuario</label>
+        <input type="text" id="f-login-user" placeholder="Ej: mperez" autocomplete="username">
+      </div>
+      <div class="field full">
+        <label for="f-login-pass">Contraseña</label>
+        <div class="pass-wrap">
+          <input type="password" id="f-login-pass" placeholder="Tu contraseña" autocomplete="current-password">
+          <button type="button" class="pass-toggle" id="passToggleBtn" onclick="togglePassword()" title="Mostrar contraseña" aria-label="Mostrar contraseña">
+            <svg viewBox="0 0 24 24"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <label class="remember">
+        <input type="checkbox" id="f-login-remember"> Recordar usuario
+      </label>
+
+      <p class="login-error" id="loginError"></p>
+      <button class="btn btn-primary login-btn" id="loginBtn" onclick="doLogin(event)">Ingresar</button>
+      <p class="login-help">¿Olvidaste tu contraseña? Consultá con el administrador del sistema.</p>
     </div>
-    <div class="field full">
-      <label>Contraseña</label>
-      <input type="password" id="f-login-pass" placeholder="••••••••" autocomplete="current-password">
-    </div>
-    <p class="login-error" id="loginError"></p>
-    <button class="btn btn-primary login-btn" onclick="doLogin(event)">Ingresar</button>
+    <p class="login-footer">Sistema de Gestión Bibliotecaria · v1.0 · CESPA 2026</p>
   </div>
 </div>
 
@@ -46,13 +64,12 @@
 <header>
   <div class="head-row">
     <div>
-      <h1> Biblioteca Colegio Secundario San Carlos</h1>
-      <p>Gestión moderna de préstamos, libros y socios</p>
+      <h1>Biblioteca Colegio Secundario San Carlos</h1>
+      <p>Sistema de gestión bibliotecaria</p>
     </div>
     <div class="head-actions">
-      <span class="mono" id="currentUserInfo" style="color:var(--ink-soft); font-size:0.75rem; margin-right:2px;"></span>
+      <span class="user-info" id="currentUserInfo"></span>
       <button class="btn-icon" id="themeToggleBtn" onclick="toggleTheme()" title="Cambiar a modo oscuro" aria-label="Cambiar tema claro/oscuro">🌙</button>
-      <button class="btn btn-primary" onclick="openModal('modalLoan', event)">+ Préstamo</button>
       <button class="btn btn-ghost" onclick="doLogout(event)">Salir</button>
     </div>
   </div>
@@ -60,80 +77,105 @@
 
 <nav class="nav-bar glass">
   <div class="nav-container">
-    <button class="nav-tab active" data-tab="home" onclick="switchTab('home', event)">Inicio</button>
-    <button class="nav-tab" data-tab="loans" onclick="switchTab('loans', event)">Préstamos</button>
-    <button class="nav-tab" data-tab="books" onclick="switchTab('books', event)">Catálogo</button>
-    <button class="nav-tab" data-tab="members" onclick="switchTab('members', event)">Socios</button>
-    <button class="nav-tab" data-tab="sanciones" data-roles="ADMIN,BIBLIOTECARIO" onclick="switchTab('sanciones', event)">Sanciones</button>
-    <button class="nav-tab" data-tab="reportes" data-roles="ADMIN,BIBLIOTECARIO" onclick="switchTab('reportes', event)">Reportes</button>
-    <button class="nav-tab" data-tab="usuarios" data-roles="ADMIN" onclick="switchTab('usuarios', event)">Usuarios</button>
+    <div class="tool-group">
+      <button class="nav-tab tool-action" onclick="openModal('modalLoan', event)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg><span>Nuevo préstamo</span></button>
+    </div>
+    <div class="tool-group">
+    <button class="nav-tab active" data-tab="home" onclick="switchTab('home', event)"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z"/></svg><span>Inicio</span></button>
+    <button class="nav-tab" data-tab="loans" onclick="switchTab('loans', event)"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg><span>Préstamos</span></button>
+    <button class="nav-tab" data-tab="books" onclick="switchTab('books', event)"><svg viewBox="0 0 24 24"><path d="M4 4h5v16H4zM10 4h4v16h-4z"/><path d="M15.5 5.2l3.8-1 2.6 15.6-3.8 1z"/></svg><span>Catálogo</span></button>
+    <button class="nav-tab" data-tab="members" onclick="switchTab('members', event)"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.2A6.5 6.5 0 0 1 21.5 20"/></svg><span>Socios</span></button>
+    </div>
+    <div class="tool-group">
+    <button class="nav-tab" data-tab="sanciones" data-roles="ADMIN,BIBLIOTECARIO" onclick="switchTab('sanciones', event)"><svg viewBox="0 0 24 24"><path d="M12 3 2 20h20z"/><path d="M12 10v4.5M12 17.5v.5"/></svg><span>Sanciones</span></button>
+    <button class="nav-tab" data-tab="reportes" data-roles="ADMIN,BIBLIOTECARIO" onclick="switchTab('reportes', event)"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Reportes</span></button>
+    <button class="nav-tab" data-tab="usuarios" data-roles="ADMIN" onclick="switchTab('usuarios', event)"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="1.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><span>Usuarios</span></button>
+    </div>
   </div>
   <select class="mobile-nav-select" id="mobileNavSelect" onchange="switchTab(this.value)">
-    <option value="home">🏠 Inicio</option>
-    <option value="loans">📖 Préstamos</option>
-    <option value="books">📚 Catálogo</option>
-    <option value="members">👥 Socios</option>
-    <option value="sanciones" data-roles="ADMIN,BIBLIOTECARIO">⚠️ Sanciones</option>
-    <option value="reportes" data-roles="ADMIN,BIBLIOTECARIO">📊 Reportes</option>
-    <option value="usuarios" data-roles="ADMIN">🔑 Usuarios</option>
+    <option value="home">Inicio</option>
+    <option value="loans">Préstamos</option>
+    <option value="books">Catálogo</option>
+    <option value="members">Socios</option>
+    <option value="sanciones" data-roles="ADMIN,BIBLIOTECARIO">Sanciones</option>
+    <option value="reportes" data-roles="ADMIN,BIBLIOTECARIO">Reportes</option>
+    <option value="usuarios" data-roles="ADMIN">Usuarios</option>
   </select>
 </nav>
 
 <main>
   <!-- TAB: HOME -->
   <section id="tab-home" class="tab-content active">
-    <div class="dash-grid">
-      <div class="dash-card glass">
-        <div class="num mono" id="dashActiveLoans" style="color:var(--cobalt);">0</div>
-        <div class="lbl">Préstamos Activos</div>
-      </div>
-      <div class="dash-card glass">
-        <div class="num mono" id="dashOverdueLoans" style="color:var(--red);">0</div>
-        <div class="lbl">Préstamos Vencidos</div>
-      </div>
-      <div class="dash-card glass">
-        <div class="num mono" id="dashTotalBooks" style="color:var(--ink);">0</div>
-        <div class="lbl">Libros Registrados</div>
-      </div>
-      <div class="dash-card glass">
-        <div class="num mono" id="dashTotalMembers" style="color:var(--green);">0</div>
-        <div class="lbl">Socios Activos</div>
-      </div>
-    </div>
-
-    <h3 class="section-title">Acciones Rápidas</h3>
-    <div class="quick-actions">
-      <div class="action-btn glass" onclick="openModal('modalLoan', event)">
-       
-        <div>
-          <strong>Nuevo Préstamo</strong>
-          <div style="font-size:0.75rem; color:var(--ink-soft);">Registrar entrega de libro</div>
+    <div class="win-panel">
+      <div class="win-title"><span>Panel de resumen</span><span class="win-title-extra" id="homeFecha"></span></div>
+      <div class="stats-bar">
+        <div class="stat" onclick="switchTab('loans')">
+          <span class="dash-ico ico-cobalt"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg></span>
+          <span class="num mono" id="dashActiveLoans">0</span>
+          <span class="stat-txt"><span class="lbl">Préstamos activos</span><span class="dash-sub" id="dashActiveSub"></span></span>
         </div>
-      </div>
-      <div class="action-btn glass" onclick="openModal('modalBook', event)">
-        
-        <div>
-          <strong>Añadir Libro</strong>
-          <div style="font-size:0.75rem; color:var(--ink-soft);">Ampliar el catálogo</div>
+        <div class="stat" onclick="switchTab('loans')">
+          <span class="dash-ico ico-red"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+          <span class="num mono" id="dashOverdueLoans">0</span>
+          <span class="stat-txt"><span class="lbl">Vencidos</span><span class="dash-sub" id="dashOverdueSub"></span></span>
         </div>
-      </div>
-      <div class="action-btn glass" onclick="openModal('modalMember', event)">
-       
-        <div>
-          <strong>Nuevo Socio</strong>
-          <div style="font-size:0.75rem; color:var(--ink-soft);">Registrar miembro</div>
+        <div class="stat" onclick="switchTab('books')">
+          <span class="dash-ico ico-ink"><svg viewBox="0 0 24 24"><path d="M4 4h5v16H4zM10 4h4v16h-4z"/><path d="M15.5 5.2l3.8-1 2.6 15.6-3.8 1z"/></svg></span>
+          <span class="num mono" id="dashTotalBooks">0</span>
+          <span class="stat-txt"><span class="lbl">Libros</span><span class="dash-sub" id="dashBooksSub"></span></span>
+        </div>
+        <div class="stat" onclick="switchTab('members')">
+          <span class="dash-ico ico-green"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.2A6.5 6.5 0 0 1 21.5 20"/></svg></span>
+          <span class="num mono" id="dashTotalMembers">0</span>
+          <span class="stat-txt"><span class="lbl">Personas</span><span class="dash-sub" id="dashMembersSub"></span></span>
         </div>
       </div>
     </div>
 
-    <h3 class="section-title">Préstamos Próximos o Vencidos</h3>
-    <div class="table-wrap">
-      <table class="data-table">
-        <thead>
-          <tr><th>Libro</th><th>Socio</th><th>Vence</th><th>Estado</th></tr>
-        </thead>
-        <tbody id="homeRecentLoans"></tbody>
-      </table>
+    <div class="win-grid">
+      <div class="win-panel">
+        <div class="win-title"><span>Últimos socios</span></div>
+        <div class="win-body">
+          <table class="grid-table">
+            <thead><tr><th>N°</th><th>DNI</th><th>Nombre</th><th>Tipo</th><th>Condición</th></tr></thead>
+            <tbody id="homeLastMembers"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="win-panel">
+        <div class="win-title"><span>Últimos libros</span></div>
+        <div class="win-body">
+          <table class="grid-table">
+            <thead><tr><th>N°</th><th>ISBN</th><th>Título</th><th>Autor</th><th>Disp.</th></tr></thead>
+            <tbody id="homeLastBooks"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="win-panel">
+        <div class="win-title"><span>Últimos préstamos</span><button class="win-link" onclick="switchTab('loans')">Ver todos</button></div>
+        <div class="win-body">
+          <table class="grid-table">
+            <thead><tr><th>Fecha</th><th>Libro</th><th>Socio</th><th>Vence</th><th>Estado</th></tr></thead>
+            <tbody id="homeLastLoans"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="win-panel">
+        <div class="win-title"><span>Últimas devoluciones</span></div>
+        <div class="win-body">
+          <table class="grid-table">
+            <thead><tr><th>Fecha</th><th>Libro</th><th>Socio</th><th>Estado del libro</th></tr></thead>
+            <tbody id="homeLastReturns"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="win-panel">
+      <div class="win-title"><span>Evolución de los préstamos</span><span class="win-title-extra" id="homeChartYear"></span></div>
+      <div class="chart-body">
+        <div class="bar-chart" id="homeChart" role="img" aria-label="Cantidad de préstamos por mes"></div>
+      </div>
     </div>
   </section>
 

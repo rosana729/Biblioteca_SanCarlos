@@ -51,6 +51,11 @@ async function doLogin(evt){
     return;
   }
 
+  const btn = document.getElementById('loginBtn');
+  if(btn.disabled) return;
+  btn.disabled = true;
+  btn.textContent = 'Ingresando…';
+
   try {
     const res = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
@@ -64,6 +69,11 @@ async function doLogin(evt){
       return;
     }
 
+    try {
+      if(document.getElementById('f-login-remember').checked) localStorage.setItem('lib_remember_user', username);
+      else localStorage.removeItem('lib_remember_user');
+    } catch(e){}
+
     authToken = data.token;
     currentUser = data.usuario;
     sessionStorage.setItem('lib_token', authToken);
@@ -71,6 +81,28 @@ async function doLogin(evt){
     await showApp();
   } catch (err){
     errorEl.textContent = 'No se pudo conectar con el servidor. ¿Está corriendo el backend?';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Ingresar';
+  }
+}
+
+function togglePassword(){
+  const input = document.getElementById('f-login-pass');
+  const btn = document.getElementById('passToggleBtn');
+  const mostrar = input.type === 'password';
+  input.type = mostrar ? 'text' : 'password';
+  btn.classList.toggle('on', mostrar);
+  btn.title = mostrar ? 'Ocultar contraseña' : 'Mostrar contraseña';
+  btn.setAttribute('aria-label', btn.title);
+}
+
+function cargarUsuarioRecordado(){
+  let user = null;
+  try { user = localStorage.getItem('lib_remember_user'); } catch(e){}
+  if(user){
+    document.getElementById('f-login-user').value = user;
+    document.getElementById('f-login-remember').checked = true;
   }
 }
 
@@ -82,6 +114,7 @@ function doLogout(evt){
   sessionStorage.removeItem('lib_user');
   document.getElementById('f-login-user').value = '';
   document.getElementById('f-login-pass').value = '';
+  cargarUsuarioRecordado();
   document.getElementById('appContent').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
 }
@@ -118,7 +151,9 @@ function setTheme(theme){
   try { localStorage.setItem('biblioteca_theme', theme); } catch(e){}
   const btn = document.getElementById('themeToggleBtn');
   if(btn){
-    btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+    btn.innerHTML = theme === 'dark'
+      ? '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>'
+      : '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>';
     btn.title = theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
   }
 }
@@ -130,6 +165,7 @@ function initTheme(){
 // Permite iniciar sesión presionando Enter
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
+  cargarUsuarioRecordado();
   ['f-login-user', 'f-login-pass'].forEach(id => {
     const el = document.getElementById(id);
     if(el){
@@ -261,29 +297,6 @@ function showToast(message, type){
   setTimeout(() => t.remove(), 3000);
 }
 
-// ---------- Ripple ----------
-function addRipple(evt){
-  if(!evt || !evt.currentTarget) return;
-  const btn = evt.currentTarget;
-  const rect = btn.getBoundingClientRect();
-  const circle = document.createElement('span');
-  const size = Math.max(rect.width, rect.height);
-  circle.className = 'ripple';
-  circle.style.width = circle.style.height = size + 'px';
-  circle.style.left = (evt.clientX - rect.left - size/2) + 'px';
-  circle.style.top = (evt.clientY - rect.top - size/2) + 'px';
-  btn.appendChild(circle);
-  setTimeout(() => circle.remove(), 550);
-}
-document.addEventListener('click', (e) => {
-  const btn = e.target.closest('.btn, .nav-tab, .action-btn');
-  if(btn){
-    btn.style.position = btn.style.position || 'relative';
-    btn.style.overflow = 'hidden';
-    addRipple({currentTarget: btn, clientX: e.clientX, clientY: e.clientY});
-  }
-});
-
 // ---------- Fechas & Utilidades ----------
 function todayISO(){ return new Date().toISOString().slice(0,10); }
 function daysBetween(a, b){ return Math.round((new Date(b) - new Date(a)) / 86400000); }
@@ -345,7 +358,7 @@ function switchTab(tabId, evt){
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
 
-  const boton = (evt && evt.target) || document.querySelector(`.nav-tab[data-tab="${tabId}"]`);
+  const boton = document.querySelector(`.nav-tab[data-tab="${tabId}"]`);
   if(boton) boton.classList.add('active');
 
   const select = document.getElementById('mobileNavSelect');
@@ -1087,7 +1100,12 @@ async function toggleEstadoUsuario(id, estadoActual){
 // ---------------------------------------------------------------------
 // Renders / Renderizado
 // ---------------------------------------------------------------------
-function renderHome(){
+function renderHomeHeader(){
+  const fecha = new Date().toLocaleDateString('es-AR', {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'});
+  document.getElementById('homeFecha').textContent = fecha.charAt(0).toUpperCase() + fecha.slice(1);
+}
+
+function renderHomeStats(){
   if(dashboardResumen){
     document.getElementById('dashActiveLoans').textContent = dashboardResumen.prestamos_activos;
     document.getElementById('dashOverdueLoans').textContent = dashboardResumen.prestamos_vencidos;
@@ -1095,27 +1113,118 @@ function renderHome(){
     document.getElementById('dashTotalMembers').textContent = dashboardResumen.total_socios;
   }
 
-  const urgentLoans = loans.filter(l =>
-    (l.estado === 'activo' || l.estado === 'atrasado') &&
-    (statusOf(l) === 'overdue' || statusOf(l) === 'due-soon')
-  );
-  const container = document.getElementById('homeRecentLoans');
-  if(!container) return;
+  const hoy = todayISO();
+  const abiertos = loans.filter(l => l.estado === 'activo' || l.estado === 'atrasado');
+  const prestadosHoy = loans.filter(l => l.fecha_prestamo === hoy).length;
+  const vencenSemana = abiertos.filter(l => {
+    const d = daysBetween(hoy, l.fecha_estimada_devolucion);
+    return d >= 0 && d <= 7;
+  }).length;
+  const ejemplaresDisp = books.reduce((acc, b) => acc + (b.ejemplares_disponibles || 0), 0);
+  const sociosPagos = members.filter(m => m.es_socio).length;
 
-  if(!urgentLoans.length){
-    container.innerHTML = '<tr><td colspan="4" class="empty-state-cell">No hay préstamos urgentes o vencidos. ¡Todo al día! ✨</td></tr>';
-    return;
-  }
-  container.innerHTML = urgentLoans.map(l => {
-    const s = statusOf(l);
+  document.getElementById('dashActiveSub').textContent = `${prestadosHoy} hoy`;
+  document.getElementById('dashOverdueSub').textContent = `${vencenSemana} por vencer`;
+  document.getElementById('dashBooksSub').textContent = `${ejemplaresDisp} en estante`;
+  document.getElementById('dashMembersSub').textContent = `${sociosPagos} socios`;
+}
+
+function fechaCorta(iso){
+  if(!iso) return '';
+  const [a, m, d] = iso.slice(0, 10).split('-');
+  return `${d}/${m}/${a}`;
+}
+
+function filasOVacio(tbody, filas, columnas, textoVacio){
+  const el = document.getElementById(tbody);
+  if(!el) return;
+  el.innerHTML = filas.length
+    ? filas.join('')
+    : `<tr class="grid-empty"><td colspan="${columnas}">${textoVacio}</td></tr>`;
+}
+
+function renderHomeTables(){
+  const ultimosSocios = [...members].sort((a, b) => b.id - a.id).slice(0, 6);
+  filasOVacio('homeLastMembers', ultimosSocios.map(m => `
+    <tr>
+      <td class="num-cell">${m.id}</td>
+      <td class="mono">${m.dni || ''}</td>
+      <td>${m.nombre_completo}</td>
+      <td>${tipoLabel(m.tipo)}</td>
+      <td>${esSocioLabel(m)}</td>
+    </tr>`), 5, 'No hay personas registradas.');
+
+  const ultimosLibros = [...books].sort((a, b) => b.id - a.id).slice(0, 6);
+  filasOVacio('homeLastBooks', ultimosLibros.map(b => `
+    <tr>
+      <td class="num-cell">${b.id}</td>
+      <td class="mono">${b.isbn || ''}</td>
+      <td>${b.titulo}</td>
+      <td>${b.autor || ''}</td>
+      <td class="num-cell">${b.ejemplares_disponibles}/${b.cantidad_ejemplares}</td>
+    </tr>`), 5, 'No hay libros cargados.');
+
+  const ultimosPrestamos = [...loans]
+    .sort((a, b) => (b.fecha_prestamo > a.fecha_prestamo ? 1 : b.fecha_prestamo < a.fecha_prestamo ? -1 : b.id - a.id))
+    .slice(0, 6);
+  filasOVacio('homeLastLoans', ultimosPrestamos.map(l => {
+    const st = statusOf(l);
     return `
     <tr onclick="verDetallePrestamo(${l.id})">
-      <td><strong>${l.libro_titulo || '—'}</strong></td>
-      <td>${l.socio_nombre || '—'}</td>
-      <td>${formatDate(l.fecha_estimada_devolucion)}</td>
-      <td><span class="status-chip ${s}">${statusLabel(s, l)}</span></td>
+      <td class="mono">${fechaCorta(l.fecha_prestamo)}</td>
+      <td>${l.libro_titulo || ''}</td>
+      <td>${l.socio_nombre || ''}</td>
+      <td class="mono">${fechaCorta(l.fecha_estimada_devolucion)}</td>
+      <td><span class="grid-state ${st}">${statusLabel(st, l)}</span></td>
     </tr>`;
+  }), 5, 'No hay préstamos registrados.');
+
+  const ultimasDevoluciones = loans
+    .filter(l => l.fecha_real_devolucion)
+    .sort((a, b) => (b.fecha_real_devolucion > a.fecha_real_devolucion ? 1 : b.fecha_real_devolucion < a.fecha_real_devolucion ? -1 : b.id - a.id))
+    .slice(0, 6);
+  filasOVacio('homeLastReturns', ultimasDevoluciones.map(l => `
+    <tr onclick="verDetallePrestamo(${l.id})">
+      <td class="mono">${fechaCorta(l.fecha_real_devolucion)}</td>
+      <td>${l.libro_titulo || ''}</td>
+      <td>${l.socio_nombre || ''}</td>
+      <td>${estadoDevueltoLabel(l.estado_libro_devuelto)}</td>
+    </tr>`), 4, 'Todavía no hubo devoluciones.');
+}
+
+function renderHomeChart(){
+  const cont = document.getElementById('homeChart');
+  if(!cont) return;
+  const anio = new Date().getFullYear();
+  const mesActual = new Date().getMonth();
+  const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const mesesLargos = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const cuenta = new Array(12).fill(0);
+  loans.forEach(l => {
+    if(l.fecha_prestamo && Number(l.fecha_prestamo.slice(0, 4)) === anio){
+      cuenta[Number(l.fecha_prestamo.slice(5, 7)) - 1]++;
+    }
+  });
+  const max = Math.max(...cuenta, 1);
+  const mesMax = cuenta.indexOf(Math.max(...cuenta));
+  document.getElementById('homeChartYear').textContent = `Año ${anio} · ${cuenta.reduce((a, b) => a + b, 0)} préstamos`;
+
+  cont.innerHTML = cuenta.map((n, i) => {
+    const etiqueta = (n > 0 && (i === mesMax || i === mesActual)) ? `<span class="bar-val">${n}</span>` : '';
+    const tip = `${mesesLargos[i]}: ${n} préstamo${n === 1 ? '' : 's'}`;
+    return `
+    <div class="bar-col${i === mesActual ? ' current' : ''}" data-tip="${tip}">
+      <div class="bar-area">${etiqueta}<div class="bar" style="height:${(n / max) * 88}%"></div></div>
+      <span class="bar-lbl">${meses[i]}</span>
+    </div>`;
   }).join('');
+}
+
+function renderHome(){
+  renderHomeHeader();
+  renderHomeStats();
+  renderHomeTables();
+  renderHomeChart();
 }
 
 function applyLoanFilters(){
